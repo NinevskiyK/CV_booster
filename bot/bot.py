@@ -101,7 +101,7 @@ async def upgrade_resume(message):
         vacancy_text = message.text
         await bot.send_message(message.chat.id, 'Жду ответа от ChatGPT, это может занять время...') # TODO: find reliable awiat
         message = "Can you rewrite this resume for a job vacancy:\
-                     leave only relevant information(for example, delete projects with languages that aren't needed for position),\
+                     leave only relevant information(for example, delete projects that aren't needed for position),\
                      add some relevant information too, \
                      improve grammar, delete unread symbols,\
                      make it fit one page, \
