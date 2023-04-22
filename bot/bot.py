@@ -101,10 +101,11 @@ async def upgrade_resume(message):
         vacancy_text = message.text
         await bot.send_message(message.chat.id, 'Жду ответа от ChatGPT, это может занять время...') # TODO: find reliable awiat
         message = "Can you rewrite this resume for a job vacancy:\
-                     leave only relevant information(for example, delete projects that aren't needed for position),\
-                     add some relevant information too, \
+                     delete irrelevant information, leave only relevant staff(for example, delete projects that aren't relevant to this position)\
+                     add some relevant information, \
+                     highlight skills asked in vacancy,\
                      improve grammar, delete unread symbols,\
-                     make it fit one page, \
+                     make it fit one page. \
                 I want to compile it with latex, so write only latex code. Don't use any non-standart packages \
                 - make sure I can compile it with pdflatex\
                 \nHere is Vacancy:\n\n" + vacancy_text + "\n\nAnd here is Resume:\n" + resume_text
