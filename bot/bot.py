@@ -105,7 +105,7 @@ async def upgrade_resume(message):
                      add some relevant information, \
                      highlight skills asked in vacancy,\
                      improve grammar, delete unread symbols,\
-                     make it fit one page. \
+                     make it fit one page. Don't make up anything, use information only from CV, but you can and should aggregate it. \
                 I want to compile it with latex, so write only latex code. Don't use any non-standart packages \
                 - make sure I can compile it with pdflatex\
                 \nHere is Vacancy:\n\n" + vacancy_text + "\n\nAnd here is Resume:\n" + resume_text
@@ -125,11 +125,12 @@ async def upgrade_resume(message):
     except:
         raise
 
-def compile_latex(path, latex):
+def compile_latex(name, latex):
     try:
-        with open(path + '.tex', 'w+') as f:
+        with open(CV_path + name + '.tex', 'w+') as f:
             f.write(latex)
-        os.system(f"pdflatex --interaction=batchmode {path + '.tex'} -output_directory={CV_path} 2>&1 > /dev/null") #TODO why output-dir doesn't work + do not create temp files
+        os.system(f"cd {CV_path} && pdflatex --interaction=batchmode {name + '.tex'} 2>&1 > /dev/null")
+        os.system(f"find {CV_path} -not -name '*.pdf' -not -name  '*.txt' -not -name  '*.tex' -type f -delete")
     except:
         raise
 
@@ -138,10 +139,9 @@ async def create_resume(message):
     try:
         await bot.send_message(message.chat.id, 'Начинаю создавать идеальное резюме...')
         text = await upgrade_resume(message)
-        path = CV_path + str(message.from_user.id) + '_upd'
-        compile_latex(path, text)
-        os.system(f"mv {str(message.from_user.id) + '_upd' + '.pdf'} {CV_path}")
-        with open(path + '.pdf', 'rb') as f:
+        name = str(message.from_user.id) + '_upd'
+        compile_latex(name, text)
+        with open(CV_path + name + '.pdf', 'rb') as f:
             await bot.send_message(message.chat.id, 'Готово! Вот твое резюме:')
             await bot.send_document(message.chat.id, f)
     except Exception as e:
