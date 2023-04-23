@@ -7,6 +7,8 @@ from pypdf import PdfReader
 import glob
 import openai
 import os
+import json
+import aioconsole
 
 config = configparser.ConfigParser()
 config.read("bot/config.ini")
@@ -16,6 +18,19 @@ bot = AsyncTeleBot(tg_token)
 openai.api_key = config["CHATGPT"]["token"]
 
 CV_path = 'bot/CVs/'
+def check_whitelist(func):
+    def is_known(id):
+        with open('bot/whitelist.json') as f:
+            known = json.load(f)
+        return str(id) in known
+
+    async def inner(message):
+        if not is_known(message.from_user.id):
+            await bot.send_message(message.chat.id, "Я тебя не знаю - попроси админов добавить тебя в whitelist!")
+            print(f"User {message.from_user.first_name} {message.from_user.last_name} (@{message.from_user.username}, id {message.from_user.id}) tried to the bot, I've denied. Type id to add to the whitelist")
+        else:
+            await func(message)
+    return inner
 
 async def something_wrong(id, append=""):
     try:
@@ -28,6 +43,7 @@ async def something_wrong(id, append=""):
 
 
 @bot.message_handler(commands=['start'])
+@check_whitelist
 async def hello(message):
     try:
         await bot.send_message(message.chat.id, 'Привет! Я помогу тебе сделать уникальное резюме под вакансию! Для начала - пришли мне твое текущее резюме в pdf')
@@ -73,6 +89,7 @@ async def proccess_file(user_id, doc_id):
     
 
 @bot.message_handler(content_types=['document'])
+@check_whitelist
 async def doc_saver(message):
     try:
         await bot.send_message(message.chat.id, 'Начинаю процесс обработки резюме!')
@@ -135,6 +152,7 @@ def compile_latex(name, latex):
         raise
 
 @bot.message_handler(content_types=['text'])
+@check_whitelist
 async def create_resume(message):
     try:
         await bot.send_message(message.chat.id, 'Начинаю создавать идеальное резюме...')
@@ -149,7 +167,25 @@ async def create_resume(message):
         await something_wrong(message.chat.id, append="Попробуйте перезадать запрос, иногда chatgpt может тупить")
 
 
-asyncio.run(bot.polling(none_stop=True))
+async def admin_handler():
+    while True:
+        id = await aioconsole.ainput()
+        a = {}
+        with open('bot/whitelist.json', 'r') as f:
+            a = json.load(f)
+        a.append(id)
+        with open('bot/whitelist.json', 'w') as f:
+            json.dump(a, f)
+        print(f"Добавил в разрешенный список {id}!")
+
+async def main():
+    await asyncio.gather(
+        bot.polling(none_stop=True),
+        admin_handler()
+    )
+
+
+asyncio.run(main())
 
 """
 global TODO's:
